@@ -21,6 +21,7 @@ std::vector<GridLocation> SquareGrid::neighbors(
 }
 
 std::array<GridLocation, 4> SquareGrid::DIRS = {
+    /* Right, Left, Up, Down */
     /* East, West, North, South */
     GridLocation{1, 0}, GridLocation{-1, 0}, GridLocation{0, -1},
     GridLocation{0, 1}};

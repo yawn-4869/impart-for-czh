@@ -99,6 +99,18 @@ struct Goods {
 
 struct SquareGrid {
   static std::array<GridLocation, 4> DIRS;
+  static int32_t get_dirs_index(GridLocation loc) {
+    if (std::abs(loc.x) > 1 || std::abs(loc.y) > 1) {
+      throw std::runtime_error("Wrong loc for dirs indexing with ("+std::to_string(loc.x)+','+std::to_string(loc.y)+")");
+    }
+    for (int32_t idx = 0; idx < 4; ++idx) {
+      if (DIRS[idx] == loc) return idx;
+    }
+  }
+
+  static int32_t get_dirs_index(GridLocation source, GridLocation target) {
+    return get_dirs_index(GridLocation{target.x-source.x, target.y-source.x});
+  }
 
   int32_t width, height;
   std::unordered_set<GridLocation> walls;
