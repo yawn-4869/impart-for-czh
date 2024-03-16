@@ -18,7 +18,7 @@ struct Reader {
     int32_t bid;
     ins >> bid;
     ins >> berth.pos.x >> berth.pos.y >> berth.transport_time >>
-        berth.load_time;
+        berth.load_speed;
   }
   template <typename Bt>
   void read_berths(std::vector<Bt>& berths, std::istream& ins) {

@@ -7,18 +7,18 @@ inline double manhattan(GridLocation a, GridLocation b) {
   return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 
-template <typename Location, template <typename> typename Sequence>
-int32_t select(const Robot& robot, Sequence<Goods>& goods) {
-  int32_t max_value = -400, pred_dist = 0, cur_value, good_idx;
-  for (int32_t i = 0; i < goods.size(); ++i) {
-    pred_dist = manhattan(robot.pos, goods[i].pos);
-    cur_value = goods[i].value - pred_dist;  // value ordering
+template <typename El, template <typename> typename Sequence>
+int32_t target_select(const Robot& robot, Sequence<El>& elements, std::function<int32_t(El, int32_t)> value_ordering) {
+  int32_t max_value = -400, pred_dist = 0, cur_value, elem_idx;
+  for (int32_t i = 0; i < elements.size(); ++i) {
+    pred_dist = manhattan(robot.pos, elements[i].pos);
+    cur_value = value_ordering(elements[i], pred_dist);// value ordering
     if (cur_value > max_value) {
       max_value = cur_value;
-      good_idx = i;
+      elem_idx = i;
     }
   }
-  return good_idx;
+  return elem_idx;
 }
 
 template <typename Grid, typename Location>
@@ -72,6 +72,6 @@ void trace(std::unordered_map<Location, Location>& came_from,
     track.emplace_back(previous);
     previous = came_from[previous];
   }
-  log("[trace]", track); // target, target.previous, ..., start.next
+  log("trace", track); // target, target.previous, ..., start.next
   // logger->log("[trace]", track);
 }

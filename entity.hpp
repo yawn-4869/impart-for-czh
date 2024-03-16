@@ -67,11 +67,11 @@ struct Robot {
 struct Berth {
   constexpr static GridLocation size{4, 4};
   GridLocation pos;
-  int32_t transport_time, load_time;
+  int32_t transport_time, load_speed;
 
   Berth() = default;
   Berth(int32_t x, int32_t y, int32_t trans_time, int32_t load_time)
-      : pos{x, y}, transport_time(trans_time), load_time(load_time) {}
+      : pos{x, y}, transport_time(trans_time), load_speed(load_time) {}
 };
 constexpr int32_t transport_time(const Berth& from, const Berth& to) {
   return 500; /* frames */
