@@ -14,6 +14,9 @@
 
 struct GridLocation {
   int32_t x, y;
+  std::string to_string() const {
+    return "(" + std::to_string(x) + "," + std::to_string(y) + ")";
+  }
 };
 
 
@@ -62,6 +65,9 @@ struct Robot {
   Robot() = default;
   Robot(int32_t x, int32_t y) : pos{x, y} {}
   Robot(GridLocation pos_) : pos(pos_) {}
+  std::string to_string() const {
+    return pos.to_string() + ", goods: " + std::to_string(goods);
+  }
 };
 
 struct Berth {
@@ -72,6 +78,9 @@ struct Berth {
   Berth() = default;
   Berth(int32_t x, int32_t y, int32_t trans_time, int32_t load_time)
       : pos{x, y}, transport_time(trans_time), load_speed(load_time) {}
+  std::string to_string() const {
+    return pos.to_string() + ", trans: " + std::to_string(transport_time) +", speed: " + std::to_string(load_speed);
+  }
 };
 constexpr int32_t transport_time(const Berth& from, const Berth& to) {
   return 500; /* frames */
@@ -83,10 +92,16 @@ struct Boat {
 
   Boat() = default;
   Boat(int32_t capacity_) : capacity(capacity_) {}
+  std::string to_string() const {
+    return "capacity: " + std::to_string(capacity) + ", status: " + std::to_string(status) + ", dock: " + std::to_string(dock);
+  }
 };
 
 struct GameStatus {
   int32_t frame, gold;
+  std::string to_string() const {
+    return "frame: " + std::to_string(frame) + ", gold: " + std::to_string(gold);
+  }
 };
 
 struct Goods {
@@ -94,6 +109,9 @@ struct Goods {
   int32_t value, birthday, lifetime=1000 /* frames */;
 
   Goods(int32_t x, int32_t y, int32_t value_, int32_t birthday_): pos{x, y}, value(value_), birthday(birthday_) {}
+  std::string to_string() const {
+    return pos.to_string() + ", value: " + std::to_string(value);
+  }
 };
 #pragma endregion
 
@@ -109,7 +127,7 @@ struct SquareGrid {
   }
 
   static int32_t get_dirs_index(GridLocation source, GridLocation target) {
-    return get_dirs_index(GridLocation{target.x-source.x, target.y-source.x});
+    return get_dirs_index(GridLocation{target.x-source.x, target.y-source.y});
   }
 
   int32_t width, height;

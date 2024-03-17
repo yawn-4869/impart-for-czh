@@ -53,14 +53,6 @@ void search /* indeed a star search*/
   }
 }
 
-int32_t log(const char* tag, std::vector<GridLocation>& seq) {
-  std::stringstream ss;
-  for(const auto& e: seq) {
-    ss << e << ", ";
-  }
-  logger->log(tag, ss.str().c_str());
-  return ss.str().length();
-}
 
 template <typename Location>
 void trace(std::unordered_map<Location, Location>& came_from,
@@ -72,6 +64,5 @@ void trace(std::unordered_map<Location, Location>& came_from,
     track.emplace_back(previous);
     previous = came_from[previous];
   }
-  log("trace", track); // target, target.previous, ..., start.next
-  // logger->log("[trace]", track);
+  logger->log("trace", track); // target, target.previous, ..., start.next
 }

@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -8,28 +9,22 @@
 
 #define LOG_ENABLE 1
 
-class BaseLogger {
-  public:
-  virtual int32_t log(const char* tag, const char* msg) = 0;
-  template <typename _T, template<typename> typename Sequence>
-  int32_t log(const char* tag, Sequence<_T>& seq);
-};
-
-class DummyLogger: public BaseLogger {
+class DummyLogger{
   public:
   DummyLogger(const char* log_, std::ios_base::openmode mode = std::ios::app) {}
-  int32_t log(const char* tag, const char* msg) {
-    return 0;
-  }
+  int32_t log(const char* tag, const char* msg) { return 0; }
+  int32_t log(const char* tag, const std::string& msg) { return 0; }
   template <typename _T, template<typename> typename Sequence>
   int32_t log(const char* tag, Sequence<_T>& seq) {return 0;}
+  template <typename _T>
+  int32_t log(const char* tag, _T&) {return 0;}
 };
 
-class Logger: public BaseLogger {
+class Logger{
   std::string logfile;
   std::ofstream handler;
   public:
-  Logger(const char* log_, std::ios_base::openmode mode = std::ios::app): logfile(log_), handler(log_, mode) {}
+  Logger(const char* log_, std::ios_base::openmode mode = std::ios::out): logfile(log_), handler(log_, mode) {}
   ~Logger() {
     handler.close();
   }
@@ -43,6 +38,9 @@ class Logger: public BaseLogger {
     handler << ss.str() << std::endl;
     return ss.str().length();
   }
+  int32_t log(const char* tag, const std::string& msg) {
+    return log(tag, msg.c_str());
+  }
   template <typename _T, template<typename> typename Sequence>
   int32_t log(const char* tag, Sequence<_T>& seq) {
     std::stringstream ss;
@@ -51,21 +49,16 @@ class Logger: public BaseLogger {
     }
     return log(tag, ss.str().c_str());
   }
-
-  // template <typename _T>
-  // // int32_t log(const char* tag, const std::vector<_T>& seq) {
-  // int32_t log(const char* tag, std::vector<_T>& seq) {
-  //   std::stringstream ss;
-  //   for(const auto& e: seq) {
-  //     ss << e << ", ";
-  //   }
-  //   log(tag, ss.str().c_str());
-  //   return ss.str().length();
-  // }
+  template <typename _T>
+  int32_t log(const char* tag, _T& element) {
+    const std::string& str = element.to_string();
+    log(tag, str.c_str());
+    return str.length();
+  }
 };
 
 #if LOG_ENABLE == 1
-static std::unique_ptr<BaseLogger> logger = std::make_unique<Logger>("cc.log");
+static std::unique_ptr<Logger> logger = std::make_unique<Logger>("cc.log");
 #else
-static std::unique_ptr<BaseLogger> logger = std::make_unique<DummyLogger>("cc.log");
+static std::unique_ptr<DummyLogger> logger = std::make_unique<DummyLogger>("cc.log");
 #endif
