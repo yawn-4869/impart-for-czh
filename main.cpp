@@ -112,11 +112,11 @@ int main() {
         // already collect goods. on the way to berth
         logger->log("pull", "robot " + std::to_string(test_robot_id) + " pull goods: " + std::to_string(robot_task[test_robot_id]));
         writer.pull(test_robot_id);
-        map.robots[test_robot_id].goods = false;
-        robot_task[test_robot_id] = -1;
         // the berth receives one goods
         map.terminals[robot_terminal[test_robot_id]].receive();
         logger->log("berth/load", "berth: " + std::to_string(robot_terminal[test_robot_id]) + " receives a goods, current goods: " + std::to_string(map.terminals[robot_terminal[test_robot_id]].goods_todo));
+        robot_task[test_robot_id] = -1;
+        map.robots[test_robot_id].goods = false;
         robot_terminal[test_robot_id] = -1;
         // clear puller track
         berth_came_from[test_robot_id].clear();
@@ -155,6 +155,14 @@ int main() {
         *robot_dir[test_robot_id] -= 1;
       } catch (const std::runtime_error& e) { // runtime_error for no dir found
         logger->log("move/dir", std::string("dir error: ") + e.what() + "\n\ttarget_ptr: " + std::to_string((int64_t)robot_target_ptr[test_robot_id]) + "\n\tto_berth.addr: " + std::to_string((int64_t)&to_berth[test_robot_id]) + "\n\tto_goods.addr: " + std::to_string((int64_t)&to_goods[test_robot_id]) + "\nrobot_task: " + std::to_string(robot_task[test_robot_id]));
+        // TODO: robot reset (meaning drop the caught goods)
+        robot_task[test_robot_id] = -1;
+        map.robots[test_robot_id].goods = false;
+        robot_terminal[test_robot_id] = -1;
+        berth_came_from[test_robot_id].clear();
+        berth_cost_so_far[test_robot_id].clear();
+        to_berth[test_robot_id].clear();
+        robot_target_ptr[test_robot_id] = nullptr;
       }
     }
     logger->log("post/index", "goods carrying: " + std::to_string(map.robots[test_robot_id].goods) + ", dir_index: " + std::to_string(*robot_dir[test_robot_id]) + ", target berth: " + std::to_string(robot_terminal[test_robot_id]));
