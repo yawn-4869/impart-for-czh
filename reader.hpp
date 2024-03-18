@@ -36,7 +36,6 @@ struct Reader {
       logger->log("reader/berth", berth);
       berths.emplace_back(berth);
     }
-
   }
   void read_capacity(int32_t& capacity, std::istream& ins) { ins >> capacity; }
 #pragma endregion
@@ -67,13 +66,14 @@ struct Reader {
   // void initilize(EqWeightGrid<10U>& grid, const GameConfig& config,
   // std::istream& ins=std::cin);
 #pragma region frame updating components
-  void update_game_status(GameStatus& status, std::istream& ins=std::cin) {
+  void update_game_status(GameStatus& status, std::istream& ins = std::cin) {
     ins >> status.frame >> status.gold;
     logger->log("reader/game_status", status);
   }
 
-  template <template<typename> typename Sequence>
-  void update_goods(Sequence<Goods>& goods, int32_t frame, std::istream& ins=std::cin) {
+  template <template <typename> typename Sequence>
+  void update_goods(Sequence<Goods>& goods, int32_t frame,
+                    std::istream& ins = std::cin) {
     int32_t num_goods;
     ins >> num_goods;
     logger->log("reader/num_goods", std::to_string(num_goods));
@@ -85,24 +85,30 @@ struct Reader {
     }
   }
 
-  template <template<typename> typename Sequence>
-  void update_robots_status(Sequence<Robot>& robots, std::istream& ins=std::cin) {
+  template <template <typename> typename Sequence>
+  void update_robots_status(Sequence<Robot>& robots,
+                            std::istream& ins = std::cin) {
     for (Robot& robot : robots) {
       ins >> robot.goods >> robot.pos.x >> robot.pos.y >> robot.running;
       logger->log("reader/robot", robot);
     }
   }
 
-  template <template<typename> typename Sequence>
-  void update_boats_status(Sequence<Boat>& cargo, std::istream& ins=std::cin) {
+  template <template <typename> typename Sequence>
+  void update_boats_status(Sequence<Boat>& cargo,
+                           std::istream& ins = std::cin) {
     for (Boat& boat : cargo) {
       ins >> boat.status >> boat.dock;
       logger->log("reader/boat", boat);
     }
   }
 
-  template <template<typename> typename SeqGood, template<typename> typename SeqBot, template<typename> typename SeqBoat>
-  void update_frame(GameStatus& status, SeqGood<Goods>& goods, SeqBot<Robot>& robots, SeqBoat<Boat>& cargo, std::istream& ins=std::cin){
+  template <template <typename> typename SeqGood,
+            template <typename> typename SeqBot,
+            template <typename> typename SeqBoat>
+  void update_frame(GameStatus& status, SeqGood<Goods>& goods,
+                    SeqBot<Robot>& robots, SeqBoat<Boat>& cargo,
+                    std::istream& ins = std::cin) {
     update_game_status(status, ins);
     update_goods(goods, status.frame, ins);
     update_robots_status(robots, ins);

@@ -15,10 +15,9 @@
 struct GridLocation {
   int32_t x, y;
   inline operator std::string() const {
-  return "(" + std::to_string(x) + "," + std::to_string(y) + ")";
-}
+    return "(" + std::to_string(x) + "," + std::to_string(y) + ")";
+  }
 };
-
 
 #pragma region GridLocation operators
 static inline bool operator==(GridLocation lhs, GridLocation rhs) {
@@ -47,7 +46,6 @@ static inline std::string operator+(GridLocation lhs, const char* rhs) {
 }
 #pragma endregion
 
-
 namespace std {
 /* implement hash function so we can put GridLocation into an unordered_set */
 template <>
@@ -63,7 +61,7 @@ struct hash<GridLocation> {
 
 struct Robot {
   GridLocation pos;
-  int32_t stay_frame; /* for resume reference */
+  int32_t stay_frame;                 /* for resume reference */
   constexpr static int32_t STAY = 20; /* frames */
   bool running = true;
   bool goods = false;
@@ -77,7 +75,7 @@ struct Berth {
   constexpr static GridLocation size{4, 4};
   GridLocation pos;
   int32_t transport_time, load_speed;
-  int32_t goods_todo=0, goods_done=0, dock_boat_id=-1;
+  int32_t goods_todo = 0, goods_done = 0, dock_boat_id = -1;
 
   Berth() = default;
   Berth(int32_t x, int32_t y, int32_t trans_time, int32_t load_time)
@@ -102,11 +100,9 @@ struct Berth {
         return false;
       }
     }
-    return true; // clear all goods
+    return true;  // clear all goods
   }
-  void receive() {
-    goods_todo += 1;
-  }
+  void receive() { goods_todo += 1; }
 };
 constexpr int32_t transport_time(const Berth& from, const Berth& to) {
   return 500; /* frames */
@@ -114,9 +110,9 @@ constexpr int32_t transport_time(const Berth& from, const Berth& to) {
 
 struct Boat {
   constexpr static GridLocation size{2, 4};
-  int32_t capacity, status /* 0: move, 1: load, 2: wait */, dock=-1;
+  int32_t capacity, status /* 0: move, 1: load, 2: wait */, dock = -1;
   // for leaving/approaching test
-  int32_t goods=0;
+  int32_t goods = 0;
   bool leaving = false;
 
   Boat() = default;
@@ -137,15 +133,16 @@ struct GameStatus {
 
 struct Goods {
   GridLocation pos;
-  int32_t value, birthday, lifetime=1000 /* frames */;
+  int32_t value, birthday, lifetime = 1000 /* frames */;
 
-  Goods(int32_t x, int32_t y, int32_t value_, int32_t birthday_): pos{x, y}, value(value_), birthday(birthday_) {}
+  Goods(int32_t x, int32_t y, int32_t value_, int32_t birthday_)
+      : pos{x, y}, value(value_), birthday(birthday_) {}
 };
 namespace std {
 /* implement hash function so we can put GridLocation into an unordered_set */
 template <>
 struct hash<Goods> {
-  std::size_t operator()(const Goods & id) const noexcept {
+  std::size_t operator()(const Goods& id) const noexcept {
     // the pos is unique
     return std::hash<int32_t>()(id.pos.x ^ (id.pos.y << 16));
   }
@@ -159,7 +156,7 @@ std::ostream& operator<<(std::ostream& out, const Boat& boat);
 std::ostream& operator<<(std::ostream& out, const Goods& goods);
 std::ostream& operator<<(std::ostream& out, const GameStatus& status);
 
-template<typename _Tp, template<typename> typename _Seq>
+template <typename _Tp, template <typename> typename _Seq>
 std::ostream& redirect_helper(std::ostream& out, const _Seq<_Tp>& sequence) {
   out << '[';
   auto begin = sequence.begin(), end = sequence.end();
@@ -173,12 +170,16 @@ std::ostream& redirect_helper(std::ostream& out, const _Seq<_Tp>& sequence) {
   return out;
 }
 // vector
-template<typename _Tp>
-std::ostream& operator<<(std::ostream& out, const std::vector<_Tp>& sequence) { return redirect_helper(out, sequence); }
+template <typename _Tp>
+std::ostream& operator<<(std::ostream& out, const std::vector<_Tp>& sequence) {
+  return redirect_helper(out, sequence);
+}
 // deque
-template<typename _Tp>
-std::ostream& operator<<(std::ostream& out, const std::deque<_Tp>& sequence) { return redirect_helper(out, sequence); }
-#pragma endregion // operator<<
+template <typename _Tp>
+std::ostream& operator<<(std::ostream& out, const std::deque<_Tp>& sequence) {
+  return redirect_helper(out, sequence);
+}
+#pragma endregion  // operator<<
 #pragma endregion
 
 struct SquareGrid {
@@ -189,19 +190,24 @@ struct SquareGrid {
     }
     int32_t dir_idx = 0;
     for (int32_t idx = 0; idx < 4; ++idx) {
-      if (DIRS[idx] == loc) { dir_idx = idx; break; }
+      if (DIRS[idx] == loc) {
+        dir_idx = idx;
+        break;
+      }
     }
     return dir_idx;
   }
 
   static int32_t get_dirs_index(GridLocation source, GridLocation target) {
-    return get_dirs_index(GridLocation{target.x-source.x, target.y-source.y});
+    return get_dirs_index(
+        GridLocation{target.x - source.x, target.y - source.y});
   }
 
   int32_t width, height;
   std::unordered_set<GridLocation> walls;
 
-  SquareGrid(int32_t width_, int32_t height_) : width(width_), height(height_) {}
+  SquareGrid(int32_t width_, int32_t height_)
+      : width(width_), height(height_) {}
 
   inline bool in_bounds(GridLocation id) const noexcept {
     return 0 <= id.x && id.x < width && 0 <= id.y && id.y < height;
@@ -214,14 +220,12 @@ struct SquareGrid {
   std::vector<GridLocation> neighbors(GridLocation id) const noexcept;
 };
 
-
-
 template <typename Grid>
-void parse_surface_from_line(Grid& grid ,const std::string& line, int lineno) {
+void parse_surface_from_line(Grid& grid, const std::string& line, int lineno) {
   for (int32_t i = 0; i < line.size(); ++i) {
     switch (line[i]) {
       case '*':
-      case '#': 
+      case '#':
         grid.walls.insert(GridLocation{lineno, i});
         break;
       case 'A':
@@ -231,12 +235,13 @@ void parse_surface_from_line(Grid& grid ,const std::string& line, int lineno) {
   }
 }
 
-
 struct EqWeightGrid : SquareGrid {
-  std::vector<Berth> terminals; // terminal berths
+  std::vector<Berth> terminals;  // terminal berths
   std::vector<Robot> robots;
   int32_t capacity;
-  EqWeightGrid(int32_t w=200, int32_t h=200, int32_t num_bot=10, int32_t num_bth=10) : SquareGrid(w, h) { 
+  EqWeightGrid(int32_t w = 200, int32_t h = 200, int32_t num_bot = 10,
+               int32_t num_bth = 10)
+      : SquareGrid(w, h) {
     robots.reserve(num_bot);
     terminals.reserve(num_bth);
   }
@@ -272,8 +277,7 @@ struct Game {
   GameStatus status;
 
   Game() = default;
-  void test(){
+  void test() {
     // goods.erase
   }
 };
-
