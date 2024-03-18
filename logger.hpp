@@ -6,6 +6,7 @@
 #include <vector>
 #include <chrono>
 #include <memory>
+#include <type_traits>
 
 #define LOG_ENABLE 1
 
@@ -55,6 +56,24 @@ class Logger{
     log(tag, str.c_str());
     return str.length();
   }
+
+  // TODO: string concatenation delay optimization
+  // template<typename T, typename... Args>
+  // void log(T& first, Args&... args) {
+  //   std::stringstream ss;
+
+  //     if constexpr (std::is_same_v<T, int>) {
+  //         std::cout << "int: " << first << std::endl;
+  //     } else if constexpr (std::is_same_v<T, int*>) {
+  //         std::cout << "int*: " << *first << std::endl;
+  //     } else if constexpr (std::is_same_v<T, double>) {
+  //         std::cout << "double: " << first << std::endl;
+  //     }
+  //     // 递归调用printArgs，展开剩余参数
+  //     if constexpr (sizeof...(Args) > 0) {
+  //         log(args...);
+  //     }
+  // }
 };
 
 #if LOG_ENABLE == 1

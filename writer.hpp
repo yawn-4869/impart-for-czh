@@ -15,6 +15,12 @@ struct Writer {
   inline void move(int32_t idx, int32_t toward) {
     A2Out("move", idx, toward);
   }
+  inline void go(int32_t idx) {
+    A1Out("go", idx);
+  }
+  inline void ship(int32_t boat_idx, int32_t berth_idx) {
+    A2Out("ship", boat_idx, berth_idx);
+  }
   inline void flush() {
     std::cout << std::flush;
   }

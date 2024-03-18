@@ -47,7 +47,7 @@ namespace std {
 template <>
 struct hash<GridLocation> {
   std::size_t operator()(const GridLocation& id) const noexcept {
-    // NOTE: better to use something like boost hash_combine
+    // x,y in [0,199]
     return std::hash<int32_t>()(id.x ^ (id.y << 16));
   }
 };
@@ -74,12 +74,38 @@ struct Berth {
   constexpr static GridLocation size{4, 4};
   GridLocation pos;
   int32_t transport_time, load_speed;
+  int32_t goods_todo=0, goods_done=0, dock_boat_id=-1;
 
   Berth() = default;
   Berth(int32_t x, int32_t y, int32_t trans_time, int32_t load_time)
       : pos{x, y}, transport_time(trans_time), load_speed(load_time) {}
   std::string to_string() const {
     return pos.to_string() + ", trans: " + std::to_string(transport_time) +", speed: " + std::to_string(load_speed);
+  }
+  bool dock(int32_t boat_id) {
+    if (dock_boat_id != -1) return false;
+    dock_boat_id = boat_id;
+    return true;
+  }
+  void leave() {
+    goods_done = 0;
+    dock_boat_id = -1;
+  }
+  bool load() {
+    if (goods_todo > 0) {
+      if (load_speed > goods_todo) {
+        goods_done += goods_todo;
+        goods_todo = 0;
+      } else {
+        goods_done += load_speed;
+        goods_todo -= load_speed;
+        return false;
+      }
+    }
+    return true; // clear all goods
+  }
+  void receive() {
+    goods_todo += 1;
   }
 };
 constexpr int32_t transport_time(const Berth& from, const Berth& to) {
@@ -89,11 +115,22 @@ constexpr int32_t transport_time(const Berth& from, const Berth& to) {
 struct Boat {
   constexpr static GridLocation size{2, 4};
   int32_t capacity, status /* 0: move, 1: load, 2: wait */, dock=-1;
+  // for leaving/approaching test
+  int32_t goods=0;
+  bool leaving = false;
 
   Boat() = default;
   Boat(int32_t capacity_) : capacity(capacity_) {}
   std::string to_string() const {
     return "capacity: " + std::to_string(capacity) + ", status: " + std::to_string(status) + ", dock: " + std::to_string(dock);
+  }
+  void dockit(int32_t id) {
+    dock = id;
+    leaving = false;
+  }
+  void leave() {
+    dock = -1;
+    leaving = true;
   }
 };
 
@@ -113,17 +150,29 @@ struct Goods {
     return pos.to_string() + ", value: " + std::to_string(value);
   }
 };
+namespace std {
+/* implement hash function so we can put GridLocation into an unordered_set */
+template <>
+struct hash<Goods> {
+  std::size_t operator()(const Goods & id) const noexcept {
+    // the pos is unique
+    return std::hash<int32_t>()(id.pos.x ^ (id.pos.y << 16));
+  }
+};
+}  // namespace std
 #pragma endregion
 
 struct SquareGrid {
   static std::array<GridLocation, 4> DIRS;
   static int32_t get_dirs_index(GridLocation loc) {
     if (std::abs(loc.x) > 1 || std::abs(loc.y) > 1) {
-      throw std::runtime_error("Wrong loc for dirs indexing with ("+std::to_string(loc.x)+','+std::to_string(loc.y)+")");
+      throw std::runtime_error("Wrong loc for dirs indexing with " + loc.to_string());
     }
+    int32_t dir_idx = 0;
     for (int32_t idx = 0; idx < 4; ++idx) {
-      if (DIRS[idx] == loc) return idx;
+      if (DIRS[idx] == loc) { dir_idx = idx; break; }
     }
+    return dir_idx;
   }
 
   static int32_t get_dirs_index(GridLocation source, GridLocation target) {

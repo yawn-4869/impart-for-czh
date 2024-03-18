@@ -9,7 +9,7 @@ inline double manhattan(GridLocation a, GridLocation b) {
 
 template <typename El, template <typename> typename Sequence>
 int32_t target_select(const Robot& robot, Sequence<El>& elements, std::function<int32_t(El, int32_t)> value_ordering) {
-  int32_t max_value = -400, pred_dist = 0, cur_value, elem_idx;
+  int32_t max_value = -400, pred_dist = 0, cur_value, elem_idx=-1;
   for (int32_t i = 0; i < elements.size(); ++i) {
     pred_dist = manhattan(robot.pos, elements[i].pos);
     cur_value = value_ordering(elements[i], pred_dist);// value ordering
@@ -65,4 +65,27 @@ void trace(std::unordered_map<Location, Location>& came_from,
     previous = came_from[previous];
   }
   logger->log("trace", track); // target, target.previous, ..., start.next
+}
+
+template <typename Location, template<typename>typename Sequence>
+int32_t find_nearset_from_loc(Location source, Sequence<Berth>& berths) {
+  int32_t index, dist, nearsest = 1 << 31;
+  for (int32_t idx = 0; idx < berths.size(); ++idx) {
+    dist = manhattan(source, berths.pos);
+    if (nearsest > dist) {
+      nearsest = dist;
+      index = idx;
+    }
+  }
+  return index;
+}
+
+template <typename Location, template<typename>typename Sequence>
+void assign_nearest_k_from_loc(Location source, Sequence<Berth>& berths, int32_t k) {
+  if (k < 1 || k > berths.size()) throw std::runtime_error("K should be less than berths.size");
+  int32_t lengths[berths.size()] = {0};
+  for (int32_t idx = 0; idx < berths.size(); ++idx) {
+    lengths[idx] = manhattan(source, berths.pos);
+  }
+  // TODO: this function is not fully implemented
 }

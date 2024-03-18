@@ -8,6 +8,7 @@ struct Reader {
   void skip_line(std::istream& ins) {
     static std::string line;
     ins >> line;
+    // ins.ignore(10, '\n');
   }
 #pragma region initilization components
   template <typename Grid>
