@@ -14,9 +14,9 @@
 
 struct GridLocation {
   int32_t x, y;
-  std::string to_string() const {
-    return "(" + std::to_string(x) + "," + std::to_string(y) + ")";
-  }
+  inline operator std::string() const {
+  return "(" + std::to_string(x) + "," + std::to_string(y) + ")";
+}
 };
 
 
@@ -34,10 +34,16 @@ static inline bool operator<(GridLocation lhs, GridLocation rhs) {
          std::tie(rhs.x, rhs.y);  // just a definition for sorting
 }
 
-static std::basic_iostream<char>::basic_ostream& operator<<(
-    std::basic_iostream<char>::basic_ostream& out, GridLocation loc) {
-  out << '(' << loc.x << ',' << loc.y << ')';
-  return out;
+static inline GridLocation operator+(GridLocation lhs, GridLocation rhs) {
+  return GridLocation{lhs.x + rhs.x, lhs.y + rhs.y};
+}
+
+static inline std::string operator+(const char* lhs, GridLocation rhs) {
+  return lhs + std::string(rhs);
+}
+
+static inline std::string operator+(GridLocation lhs, const char* rhs) {
+  return std::string(lhs) + rhs;
 }
 #pragma endregion
 
@@ -65,9 +71,6 @@ struct Robot {
   Robot() = default;
   Robot(int32_t x, int32_t y) : pos{x, y} {}
   Robot(GridLocation pos_) : pos(pos_) {}
-  std::string to_string() const {
-    return pos.to_string() + ", goods: " + std::to_string(goods);
-  }
 };
 
 struct Berth {
@@ -79,9 +82,6 @@ struct Berth {
   Berth() = default;
   Berth(int32_t x, int32_t y, int32_t trans_time, int32_t load_time)
       : pos{x, y}, transport_time(trans_time), load_speed(load_time) {}
-  std::string to_string() const {
-    return pos.to_string() + ", trans: " + std::to_string(transport_time) +", speed: " + std::to_string(load_speed);
-  }
   bool dock(int32_t boat_id) {
     if (dock_boat_id != -1) return false;
     dock_boat_id = boat_id;
@@ -121,9 +121,6 @@ struct Boat {
 
   Boat() = default;
   Boat(int32_t capacity_) : capacity(capacity_) {}
-  std::string to_string() const {
-    return "capacity: " + std::to_string(capacity) + ", status: " + std::to_string(status) + ", dock: " + std::to_string(dock);
-  }
   void dockit(int32_t id) {
     dock = id;
     leaving = false;
@@ -136,9 +133,6 @@ struct Boat {
 
 struct GameStatus {
   int32_t frame, gold;
-  std::string to_string() const {
-    return "frame: " + std::to_string(frame) + ", gold: " + std::to_string(gold);
-  }
 };
 
 struct Goods {
@@ -146,9 +140,6 @@ struct Goods {
   int32_t value, birthday, lifetime=1000 /* frames */;
 
   Goods(int32_t x, int32_t y, int32_t value_, int32_t birthday_): pos{x, y}, value(value_), birthday(birthday_) {}
-  std::string to_string() const {
-    return pos.to_string() + ", value: " + std::to_string(value);
-  }
 };
 namespace std {
 /* implement hash function so we can put GridLocation into an unordered_set */
@@ -160,13 +151,41 @@ struct hash<Goods> {
   }
 };
 }  // namespace std
+#pragma region operator<< overload for Entities
+std::ostream& operator<<(std::ostream& out, GridLocation loc);
+std::ostream& operator<<(std::ostream& out, const Robot& robot);
+std::ostream& operator<<(std::ostream& out, const Berth& berth);
+std::ostream& operator<<(std::ostream& out, const Boat& boat);
+std::ostream& operator<<(std::ostream& out, const Goods& goods);
+std::ostream& operator<<(std::ostream& out, const GameStatus& status);
+
+template<typename _Tp, template<typename> typename _Seq>
+std::ostream& redirect_helper(std::ostream& out, const _Seq<_Tp>& sequence) {
+  out << '[';
+  auto begin = sequence.begin(), end = sequence.end();
+  if (begin != end) {
+    out << *begin++;
+  }
+  while (begin != end) {
+    out << ", " << *begin++;
+  }
+  out << ']';
+  return out;
+}
+// vector
+template<typename _Tp>
+std::ostream& operator<<(std::ostream& out, const std::vector<_Tp>& sequence) { return redirect_helper(out, sequence); }
+// deque
+template<typename _Tp>
+std::ostream& operator<<(std::ostream& out, const std::deque<_Tp>& sequence) { return redirect_helper(out, sequence); }
+#pragma endregion // operator<<
 #pragma endregion
 
 struct SquareGrid {
   static std::array<GridLocation, 4> DIRS;
   static int32_t get_dirs_index(GridLocation loc) {
     if (std::abs(loc.x) > 1 || std::abs(loc.y) > 1) {
-      throw std::runtime_error("Wrong loc for dirs indexing with " + loc.to_string());
+      throw std::runtime_error("Wrong loc for dirs indexing with " + loc);
     }
     int32_t dir_idx = 0;
     for (int32_t idx = 0; idx < 4; ++idx) {

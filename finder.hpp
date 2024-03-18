@@ -65,7 +65,7 @@ void trace(std::unordered_map<Location, Location>& came_from,
     previous = came_from[previous];
   }
   logger->log("trace", track); // target, target.previous, ..., start.next
-  logger->log("trace", "track length: " + std::to_string(track.size()));
+  logger->log("trace", "track length: ", track.size());
 }
 
 template <typename Location, template<typename>typename Sequence>

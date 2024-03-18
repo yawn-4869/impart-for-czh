@@ -77,14 +77,13 @@ int main(int argc, char **argv) {
     #pragma region robot pathfinder
     // int32_t robot_id = 0;
     for (int32_t robot_id = 0; robot_id < robot_count_limit; robot_id++) {
-    // for (int32_t robot_id = 0; robot_id < initial_config.num_robot; robot_id++) {
       if (robot_task[robot_id] == -1) { // The robot has not been assigned a task yet.
         robot_task[robot_id] = target_select<Goods, std::deque>(map.robots[robot_id], goods, [](Goods goods, int32_t pred)->int32_t{
           return goods.value - pred;
         }); // select one good
         if (robot_task[robot_id] == -1) {
           // no goods here
-          logger->log("selector", "nothing to select for robot: " + std::to_string(robot_id));
+          logger->log("selector", "nothing to select for robot: ", robot_id);
           // continue;
           break;
         } else { // U really have a target
@@ -94,21 +93,21 @@ int main(int argc, char **argv) {
           robot_dir[robot_id] = &robot_forward[robot_id];
           goods.erase(goods.begin()+robot_task[robot_id]); // remove the assigned goods
           robot_target_ptr[robot_id] = &to_goods[robot_id];
-          logger->log("to_goods", "robot_forward: "+ std::to_string(robot_forward[robot_id]));
-          logger->log("robot", "track index(robot->goods): "+ std::to_string(*robot_dir[robot_id]));
+          logger->log("to_goods", "robot_forward: ",robot_forward[robot_id]);
+          logger->log("robot", "track index(robot->goods): ", *robot_dir[robot_id]);
         }
       }
       // on the way
-      logger->log("pre/index", "goods carrying: " + std::to_string(map.robots[robot_id].goods) + ", dir_index: " + std::to_string(*robot_dir[robot_id]));
+      logger->log("pre/index", "goods carrying: ", map.robots[robot_id].goods, ", dir_index: ", *robot_dir[robot_id]);
       
       if(*robot_dir[robot_id] == -1) {
         if(map.robots[robot_id].goods) {
           // already collect goods. on the way to berth
-          logger->log("pull", "robot " + std::to_string(robot_id) + " pull goods: " + std::to_string(robot_task[robot_id]));
+          logger->log("pull", "robot ", robot_id, " pull goods: ", robot_task[robot_id]);
           writer.pull(robot_id);
           // the berth receives one goods
           map.terminals[robot_terminal[robot_id]].receive();
-          logger->log("berth/load", "berth: " + std::to_string(robot_terminal[robot_id]) + " receives a goods, current goods: " + std::to_string(map.terminals[robot_terminal[robot_id]].goods_todo));
+          logger->log("berth/load", "berth: ", robot_terminal[robot_id],  " receives a goods, current goods: ", map.terminals[robot_terminal[robot_id]].goods_todo);
           robot_task[robot_id] = -1;
           map.robots[robot_id].goods = false;
           robot_terminal[robot_id] = -1;
@@ -118,7 +117,7 @@ int main(int argc, char **argv) {
           to_berth[robot_id].clear();
           robot_target_ptr[robot_id] = nullptr;
         } else {
-          logger->log("get", "robot " + std::to_string(robot_id) + " get goods: " + std::to_string(robot_task[robot_id]));
+          logger->log("get", "robot ", robot_id,  " get goods: ", robot_task[robot_id]);
           writer.get(robot_id);
           map.robots[robot_id].goods = true;
           robot_dir[robot_id] = &robot_backward[robot_id];
@@ -134,21 +133,21 @@ int main(int argc, char **argv) {
           trace(berth_came_from[robot_id], to_berth[robot_id], map.terminals[robot_terminal[robot_id]].pos);
           robot_backward[robot_id] = to_berth[robot_id].size()-1;
           robot_target_ptr[robot_id] = &to_berth[robot_id];
-          logger->log("robot", "track index(goods->berth): "+ std::to_string(*robot_dir[robot_id]) + ", goods:" + std::to_string(map.robots[robot_id].goods));
-          logger->log("to_berth", "robot_backward: "+ std::to_string(*robot_dir[robot_id]));
+          logger->log("robot", "track index(goods->berth): ", *robot_dir[robot_id],  ", goods:", map.robots[robot_id].goods);
+          logger->log("to_berth", "robot_backward: ", *robot_dir[robot_id]);
         }
       } else {
         GridLocation target = (*robot_target_ptr[robot_id])[*robot_dir[robot_id]];
         // GridLocation target = map.robots[test_robot_id].goods? to_berth[test_robot_id][*robot_dir[test_robot_id]] : to_goods[test_robot_id][*robot_dir[test_robot_id]];
-        logger->log("dir", "robot: " + map.robots[robot_id].pos.to_string() + " -> target: " + target.to_string());
+        logger->log("dir", "robot: ", map.robots[robot_id].pos, " -> target: ", target);
         try {
           int32_t dir = SquareGrid::get_dirs_index(map.robots[robot_id].pos, target);
           // logger->log("move", {"right", "left", "up", "down"}[dir]);
-          logger->log("move", std::to_string(dir) + "/" + DIR_NAME[dir]);
+          logger->log("move", dir,  "/", DIR_NAME[dir]);
           writer.move(0, dir);
           *robot_dir[robot_id] -= 1;
         } catch (const std::runtime_error& e) { // runtime_error for no dir found
-          logger->log("move/dir", std::string("dir error: ") + e.what() + "\n\ttarget_ptr: " + std::to_string((int64_t)robot_target_ptr[robot_id]) + "\n\tto_berth.addr: " + std::to_string((int64_t)&to_berth[robot_id]) + "\n\tto_goods.addr: " + std::to_string((int64_t)&to_goods[robot_id]) + "\nrobot_task: " + std::to_string(robot_task[robot_id]));
+          logger->log("move/dir", "dir error: ", e.what(), "\n\ttarget_ptr: ", robot_target_ptr[robot_id],  "\n\tto_berth.addr: ", &to_berth[robot_id],  "\n\tto_goods.addr: ", &to_goods[robot_id],  "\nrobot_task: ", robot_task[robot_id]);
           // robot reset (meaning drop the caught goods)
           robot_task[robot_id] = -1;
           map.robots[robot_id].goods = false;
@@ -167,7 +166,7 @@ int main(int argc, char **argv) {
           robot_target_ptr[robot_id] = nullptr;
         }
       }
-      logger->log("post/index", "goods carrying: " + std::to_string(map.robots[robot_id].goods) + ", dir_index: " + std::to_string(robot_dir[robot_id]?(*robot_dir[robot_id]):-1) + ", target berth: " + std::to_string(robot_terminal[robot_id]));
+      logger->log("post/index", "goods carrying: ", map.robots[robot_id].goods,  ", dir_index: ", (robot_dir[robot_id]!=nullptr)?(*robot_dir[robot_id]):-1,  ", target berth: ", robot_terminal[robot_id]);
     }
     #pragma endregion
     #pragma region ship/berth load and tranport
@@ -176,7 +175,7 @@ int main(int argc, char **argv) {
       if (boats[i].dock != -1 && boats[i].status == 1 && map.terminals[boats[i].dock].dock_boat_id == -1) {
         bool dock_result = map.terminals[boats[i].dock].dock(i);
         if (dock_result) {
-          logger->log("dock", "boat: " + std::to_string(i) + " docked at berth: " + std::to_string(boats[i].dock));
+          logger->log("dock", "boat: ", i,  " docked at berth: ", boats[i].dock);
         }
       }
       else if (boats[i].status == 2) {
@@ -185,7 +184,7 @@ int main(int argc, char **argv) {
           if (map.terminals[j].goods_todo > 0 && map.terminals[j].dock_boat_id == -1) {
             boats[i].dockit(j);
             writer.ship(i, j);
-            logger->log("reship", "boat: " + std::to_string(i) + " goes to berth: " + std::to_string(j));
+            logger->log("reship", "boat: ", i,  " goes to berth: ", j);
             break;
           }
         }
@@ -200,7 +199,7 @@ int main(int argc, char **argv) {
         if (boats[i].dock == -1 && boats[i].status == 1) {
           boats[i].dockit(nearest_berth);
           writer.ship(i, nearest_berth);
-          logger->log("ship/near", "boat: " + std::to_string(i) + " goes to berth: " + std::to_string(nearest_berth));
+          logger->log("ship/near", "boat: ", i,  " goes to berth: ", nearest_berth);
           break;
         }
       }
@@ -211,7 +210,7 @@ int main(int argc, char **argv) {
     //     // whether here is any goods
     //     Berth& worker = map.terminals[nearest_berth];
     //     worker.load();
-    //     logger->log("berth/load", "berth: " + std::to_string(nearest_berth) + " goods remaining: " + std::to_string(worker.goods_todo) + "goods have been loaded: " + std::to_string(worker.goods_done));
+    //     logger->log("berth/load", "berth: ", nearest_berth,  " goods remaining: ", worker.goods_todo,  "goods have been loaded: ", worker.goods_done));
     //     int32_t boat_id = worker.dock_boat_id;
     //     bool get_goods = worker.goods_done > 0;
     //     bool fully_loaded = boats[boat_id].capacity == worker.goods_done;
@@ -220,14 +219,14 @@ int main(int argc, char **argv) {
     //       boats[boat_id].leave();
     //       worker.leave();
     //       writer.go(boat_id);
-    //       logger->log("go", "boat: " + std::to_string(boat_id) + " leaves from berth: " + std::to_string(nearest_berth));
+    //       logger->log("go", "boat: ", boat_id,  " leaves from berth: ", nearest_berth));
     //     }
     //   }
     //   for (int32_t i=0; i<boats.size(); ++i) {
     //     if (boats[i].dock == -1 && boats[i].status == 1) {
     //       boats[i].dockit(nearest_berth);
     //       writer.ship(i, nearest_berth);
-    //       logger->log("ship", "boat: " + std::to_string(i) + " goes to berth: " + std::to_string(nearest_berth));
+    //       logger->log("ship", "boat: ", i,  " goes to berth: ", nearest_berth));
     //     }
     //   }
     // }
@@ -238,15 +237,15 @@ int main(int argc, char **argv) {
         // calculate remaining goods
         // whether here is any goods
         Berth& worker = map.terminals[nearest_berth];
-        logger->log("berth/info", "berth: " + std::to_string(nearest_berth) + " goods remaining: " + std::to_string(worker.goods_todo) + ", goods have been loaded: " + std::to_string(worker.goods_done));
+        logger->log("berth/info", "berth: ", nearest_berth,  " goods remaining: ", worker.goods_todo,  ", goods have been loaded: ", worker.goods_done);
         bool finish = worker.load();
         int32_t boat_id = worker.dock_boat_id;
         bool get_goods = worker.goods_done > 0;
         bool fully_loaded = boats[boat_id].capacity == worker.goods_done;
         bool goods_clear = worker.goods_todo == 0;
-        logger->log("leave/check", "boat: " + std::to_string(boat_id) + ", goods loaded: " + std::to_string(worker.goods_done) + ", fully_loaded: " + std::to_string(fully_loaded));
+        logger->log("leave/check", "boat: ", boat_id,  ", goods loaded: ", worker.goods_done,  ", fully_loaded: ", fully_loaded);
         if (get_goods && (goods_clear || fully_loaded)) { // the boat has loaded some goods (or fully loaded) and there is no remaining goods
-          logger->log("go", "boat: " + std::to_string(boat_id) + " leaves from berth: " + std::to_string(nearest_berth) + " with goods carrying: " + std::to_string(worker.goods_done) + " it should score at frame: " + std::to_string(frame + worker.transport_time));
+          logger->log("go", "boat: ", boat_id, " leaves from berth: ", nearest_berth,  " with goods carrying: ", worker.goods_done,  " it should score at frame: ", frame + worker.transport_time);
           boats[boat_id].leave();
           worker.leave();
           writer.go(boat_id);
@@ -257,7 +256,7 @@ int main(int argc, char **argv) {
         if (boats[i].dock == -1 && boats[i].status == 1 && ! boats[i].leaving) {
           boats[i].dockit(nearest_berth);
           writer.ship(i, nearest_berth);
-          logger->log("ship/it", "boat: " + std::to_string(i) + " goes to berth: " + std::to_string(nearest_berth));
+          logger->log("ship/it", "boat: ", i,  " goes to berth: ", nearest_berth);
         }
       }
     }
