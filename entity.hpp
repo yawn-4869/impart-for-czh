@@ -221,7 +221,7 @@ struct EqWeightGrid : SquareGrid {
     robots.reserve(num_bot);
     terminals.reserve(num_bth);
   }
-  constexpr double cost(const GridLocation& from_node,
+  double cost(const GridLocation& from_node,
                         const GridLocation& to_node) const noexcept {
     return 1;
   }

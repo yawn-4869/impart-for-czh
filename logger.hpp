@@ -77,7 +77,7 @@ class Logger{
 };
 
 #if LOG_ENABLE == 1
-static std::unique_ptr<Logger> logger = std::make_unique<Logger>("cc.log");
+static std::unique_ptr<Logger> logger = std::unique_ptr<Logger>(new Logger("cc.log"));
 #else
 static std::unique_ptr<DummyLogger> logger = std::make_unique<DummyLogger>("cc.log");
 #endif
