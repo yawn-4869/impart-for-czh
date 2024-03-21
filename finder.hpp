@@ -12,6 +12,10 @@ int32_t target_select(const Robot& robot, Sequence<El>& elements,
                       std::function<int32_t(El, int32_t)> value_ordering) {
   int32_t max_value = -400, pred_dist = 0, cur_value, elem_idx = -1;
   for (int32_t i = 0; i < elements.size(); ++i) {
+    if(std::is_same<El, Goods>::value && elements[i].is_target) {
+      // goods has been assigned
+      continue;
+    }
     pred_dist = manhattan(robot.pos, elements[i].pos);
     cur_value = value_ordering(elements[i], pred_dist);  // value ordering
     if (cur_value > max_value) {

@@ -61,8 +61,10 @@ struct hash<GridLocation> {
 
 struct Robot {
   GridLocation pos;
-  int32_t stay_frame;                 /* for resume reference */
+  int32_t stay_frame = 0;                 /* for resume reference */
   constexpr static int32_t STAY = 20; /* frames */
+  int32_t wait_frame = 0; /*wait other robots to go*/
+  constexpr static int32_t WAIT = 5;
   bool running = true;
   bool goods = false;
 
@@ -75,7 +77,9 @@ struct Berth {
   constexpr static GridLocation size{4, 4};
   GridLocation pos;
   int32_t transport_time, load_speed;
-  int32_t goods_todo = 0, goods_done = 0, dock_boat_id = -1;
+  int32_t goods_todo = 0, goods_done = 0;
+  int32_t dock_boat_id = -1, book_boat_id = -1;
+  int32_t is_target = 0; // num of robot to berth
 
   Berth() = default;
   Berth(int32_t x, int32_t y, int32_t trans_time, int32_t load_time)
@@ -85,6 +89,9 @@ struct Berth {
     dock_boat_id = boat_id;
     return true;
   }
+  bool reservable(){ return dock_boat_id == -1 && book_boat_id == -1; }
+  /* no reservable check here */
+  void reserve(int32_t boat_id){ book_boat_id = boat_id; }
   void leave() {
     goods_done = 0;
     dock_boat_id = -1;
@@ -102,7 +109,10 @@ struct Berth {
     }
     return true;  // clear all goods
   }
-  void receive() { goods_todo += 1; }
+  void receive() { 
+    is_target--;
+    goods_todo += 1; 
+  }
 };
 constexpr int32_t transport_time(const Berth& from, const Berth& to) {
   return 500; /* frames */
@@ -125,6 +135,10 @@ struct Boat {
     dock = -1;
     leaving = true;
   }
+  /* in the virtual point or wait at the berth */
+  bool idle() const { 
+    return (dock == -1 && status == 1) || (dock != -1 && status == 2);
+  }
 };
 
 struct GameStatus {
@@ -134,6 +148,7 @@ struct GameStatus {
 struct Goods {
   GridLocation pos;
   int32_t value, birthday, lifetime = 1000 /* frames */;
+  int32_t is_target = 0; // num of robot to goods
 
   Goods(int32_t x, int32_t y, int32_t value_, int32_t birthday_)
       : pos{x, y}, value(value_), birthday(birthday_) {}
@@ -180,6 +195,18 @@ std::ostream& operator<<(std::ostream& out, const std::deque<_Tp>& sequence) {
   return redirect_helper(out, sequence);
 }
 #pragma endregion  // operator<<
+#pragma endregion
+
+#pragma region entity interaction function
+/**
+ * 0: idle boat. Able to ship to any berth [boat.idle()]
+ * 1: moving. DO NOT DISTURB IT [status==0]
+ * loading.[dock!=-1, status==1]
+ * 2: nothing to do with no goods. Ship to other berth
+ * 3: nothing to do with goods loaded. GO
+ * 4: loading. DO NOT DISTURB IT
+*/
+int32_t get_boat_status(const Boat& boat, int32_t boat_id, const std::vector<Berth>& berths);
 #pragma endregion
 
 struct SquareGrid {
@@ -248,6 +275,14 @@ struct EqWeightGrid : SquareGrid {
   double cost(const GridLocation& from_node,
                         const GridLocation& to_node) const noexcept {
     return 1;
+  }
+
+  void grid_block(bool is_block, GridLocation& loc) {
+    if(is_block) {
+      walls.insert(loc);
+    } else {
+      walls.erase(loc);
+    }
   }
 };
 

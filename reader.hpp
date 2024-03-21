@@ -83,6 +83,15 @@ struct Reader {
       goods.emplace_back(x, y, val, frame);
       logger->log("reader/goods", goods.back());
     }
+
+    // erase the overdue goods
+    for(int32_t i = 0; i < goods.size(); ++i) {
+      if(goods[i].lifetime + goods[i].birthday < frame) {
+        goods.erase(goods.begin() + i);
+      } else {
+        break;
+      }
+    }
   }
 
   template <template <typename> typename Sequence>

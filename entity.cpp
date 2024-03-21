@@ -31,7 +31,7 @@ std::ostream& operator<<(std::ostream& out, GridLocation loc) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Robot& robot) {
-  return out << robot.pos << ", goods: " << robot.goods;
+  return out << robot.pos << ", goods: " << robot.goods << ", status: " << robot.running;
 }
 
 std::ostream& operator<<(std::ostream& out, const Berth& berth) {
@@ -53,5 +53,24 @@ std::ostream& operator<<(std::ostream& out, const Goods& goods) {
 
 std::ostream& operator<<(std::ostream& out, const GameStatus& status) {
   return out << "frame: " << status.frame << ", gold: " << status.gold;
+}
+#pragma endregion
+
+#pragma region entity interaction function
+int32_t get_boat_status(const Boat& boat, int32_t boat_id, const std::vector<Berth>& berths) {
+  if (boat.idle()) { return 0; }
+  if (boat.status == 0) { return 1; }
+  if (boat.status != 1) { throw std::runtime_error("boat.status must be 1"); }
+  if (berths[boat.dock].goods_todo == 0) {
+    if (berths[boat.dock].goods_done == 0) {
+      return 2;
+    } else return 3;
+  } else {
+    if (berths[boat.dock].goods_done == boat.capacity) {
+      return 3;
+    }
+  }
+
+  return 4; // loading
 }
 #pragma endregion
